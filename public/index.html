@@ -77,7 +77,6 @@
       ></iframe>
     </section>
     <script>
-      let showMsec;
       let showTime;
       let msecNumber = 0;
       let msecValue = "";
@@ -88,12 +87,10 @@
         if (url.startsWith("http://") || url.startsWith("https://")) {
           absoluteUrl = url; // 절대 경로인 경우 그대로 사용
         } else {
-          absoluteUrl = `http://${url}`;
+          absoluteUrl = `https://${url}`;
         }
 
-        const proxyUrl = `${window.location.href}host?url=${encodeURIComponent(
-          absoluteUrl
-        )}`;
+        const proxyUrl = `${window.location.href}host?url=${absoluteUrl}`;
         fetch(proxyUrl)
           .then((response) => {
             return response.text();
@@ -101,7 +98,10 @@
           .then((dateHeaderValue) => {
             // 서버로부터 받은 Date 값 처리
             timeFormat(dateHeaderValue);
-            document.getElementById("proxyFrame").src = absoluteUrl;
+
+            document.getElementById("proxyFrame").src = `${
+              window.location.href
+            }iframe?url=${encodeURIComponent(absoluteUrl)}`;
           })
           .catch((error) => {
             console.log(error);
@@ -137,7 +137,11 @@
           };
 
           // 일정한 간격으로 시간을 업데이트
-          setInterval(updateServerTime, 1000);
+          if (showTime) {
+            clearInterval(showTime);
+          }
+          showTime = setInterval(updateServerTime, 1000);
+
           updateServerTime(); // 초기 시간 표시
         } else {
           console.log("서버 시간을 가져올 수 없습니다.");

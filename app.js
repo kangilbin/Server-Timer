@@ -2,12 +2,14 @@ const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 const fetch = require("node-fetch").default;
+const cookieParser = require("cookie-parser");
 const app = express();
 const port = 3000;
 
 // 정적 파일을 호스팅하기 위한 미들웨어 등록
 app.use(express.static("public"));
 app.use(cors());
+app.use(cookieParser());
 
 // 루트 URL에 대한 GET 요청에 응답하는 라우트 정의
 app.get("/", (req, res) => {
@@ -26,6 +28,30 @@ app.get("/host", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("서버 오류");
+  }
+});
+
+app.get("/iframe", async (req, res) => {
+  try {
+    const { session_cookie } = req.cookies;
+
+    // 인터파크에 요청을 보낼 때 세션 쿠키를 전달
+    const response = await fetch(req.query.url, {
+      headers: {
+        Cookie: `session_cookie=${session_cookie}`,
+      },
+    });
+
+    if (response.ok) {
+      // 인터파크로부터 받은 응답을 텍스트로 변환하여 클라이언트에 전달
+      const data = await response.text();
+      res.send(data);
+    } else {
+      throw new Error("Request failed");
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred");
   }
 });
 
